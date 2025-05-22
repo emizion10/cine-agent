@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import CineAgentLogo from '../assets/svg/logo.svg';
 
 const Header: React.FC = () => {
   const { isAuthenticated, username, logout } = useAuth();
@@ -13,7 +14,11 @@ const Header: React.FC = () => {
 
   return (
     <header className="App-header">
-      <h1><span className="cineagent-title">CineAgent</span></h1>
+      <div className="header-logo">
+        <img src={CineAgentLogo} alt="CineAgent Logo" style={{ height: '40px', marginRight: '10px' }} />
+        <span className="cineagent-title">CineAgent</span>
+      </div>
+      <h1>{/* Removed unnecessary h1 tag */}</h1>
       <nav>
         <ul>
           <li><a href="#" className="button dashboard-button">Dashboard</a></li>

@@ -5,6 +5,7 @@ import SignUpForm from '../components/SignUpForm';
 import Snackbar from '../components/Snackbar'; // Import Snackbar component
 import { login, signup } from '../services/authService'; // Import auth service functions
 import { useAuth } from '../context/AuthContext'; // Import useAuth hook
+import CineAgentLogo from '../assets/svg/logo.svg'; // Import the SVG as an image source
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -82,6 +83,9 @@ const AuthPage: React.FC = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
+        <div className="auth-logo">
+          <img src={CineAgentLogo} alt="CineAgent Logo" style={{ height: '80px' }} />
+        </div>
         {/* Removed error message display: {error && <p className="error-message">{error}</p>} */}
         {loading ? (
           <p>Loading...</p>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getToken, storeToken, removeToken } from '../utils/authStorage';
+import { getToken, storeAuthData, removeAuthData, getUsername } from '../utils/authStorage';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,31 +14,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
 
-  // Check for token on initial load
+  // Check for token and username on initial load
   useEffect(() => {
     const token = getToken();
-    // In a real app, you would validate the token with your backend
-    // For this example, we'll just assume a token means authenticated
-    if (token) {
-      // TODO: Fetch username from backend using the token after refresh
-      // For now, we can't get the username just from the token without another API call
-      // We might need to store username along with token or fetch user info on app load.
-      // For simplicity now, we'll just set isAuthenticated true and leave username as null initially,
-      // or fetch a placeholder/default username if the backend provides one with just a token.
-      // A better approach would be to have an endpoint like /users/me that returns user info based on token.
+    const storedUsername = getUsername(); // Get username from storage
+
+    if (token && storedUsername) {
+      // In a real app, you would validate the token with your backend
+      // For this example, we'll just assume a valid token and stored username means authenticated
       setIsAuthenticated(true);
-      // setUsername('Placeholder User'); // Placeholder - ideally fetch this
+      setUsername(storedUsername); // Set username from storage
+    } else {
+      // Clear storage if only one is present (inconsistent state)
+      removeAuthData();
     }
   }, []);
 
   const login = (token: string, username: string) => {
-    storeToken(token);
+    storeAuthData(token, username); // Store both token and username
     setIsAuthenticated(true);
     setUsername(username);
   };
 
   const logout = () => {
-    removeToken();
+    removeAuthData(); // Remove both token and username
     setIsAuthenticated(false);
     setUsername(null);
   };

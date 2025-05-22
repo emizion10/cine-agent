@@ -144,4 +144,10 @@
 .guest-button:hover {
   background-color: #e9ecef;
   border-color: #ced4da;
+}
+
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem; /* Space below the logo */
 } 

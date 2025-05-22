@@ -411,3 +411,8 @@
 .logout-button:hover {
   background-color: #4a5568; /* Highlight on hover */
 }
+
+.header-logo {
+  display: flex; /* Use flexbox */
+  align-items: center; /* Vertically align items */
+}
