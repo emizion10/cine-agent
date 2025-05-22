@@ -22,8 +22,11 @@ const Header: React.FC = () => {
       <nav>
         <ul>
           <li><a href="#" className="button dashboard-button">Dashboard</a></li>
-          <li><a href="#">My Watchlist (0)</a></li>
           
+          {isAuthenticated && (
+            <li><a href="#">My Watchlist (0)</a></li>
+          )}
+
           {isAuthenticated ? (
             <li className="user-profile">
               <button onClick={() => setShowLogout(!showLogout)} className="username-button">
