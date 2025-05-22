@@ -25,13 +25,13 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUp, onSwitchToLogin }) =>
       <h2>Create Account</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label htmlFor="name">Full Name</label>
+          <label htmlFor="name">Username</label>
           <input
             type="text"
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your full name"
+            placeholder="Enter your username"
             required
           />
         </div>

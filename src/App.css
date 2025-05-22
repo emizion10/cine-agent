@@ -342,3 +342,29 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.snackbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 4px;
+  color: white;
+  font-size: 1rem;
+  z-index: 1000;
+  opacity: 0.95;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.snackbar.success {
+  background-color: #4CAF50; /* Green */
+}
+
+.snackbar.error {
+  background-color: #f44336; /* Red */
+}
+
+.snackbar.info {
+  background-color: #2196F3; /* Blue */
+}

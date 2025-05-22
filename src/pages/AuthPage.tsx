@@ -2,21 +2,67 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import SignUpForm from '../components/SignUpForm';
+import Snackbar from '../components/Snackbar'; // Import Snackbar component
+import { login, signup } from '../services/authService'; // Import auth service functions
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null); // State for Snackbar
   const navigate = useNavigate();
 
-  const handleLogin = (email: string, password: string) => {
-    // TODO: Implement login logic
-    console.log('Login attempt:', { email, password });
-    navigate('/home');
+  const handleLogin = async (username: string, password: string) => {
+    setLoading(true);
+    setSnackbar(null); // Clear previous snackbars
+    try {
+      const response = await login({ username, password });
+      console.log('Login successful:', response);
+      // Show success snackbar
+      setSnackbar({ message: 'Login successful!', type: 'success' });
+      // TODO: Handle successful login (e.g., store token, redirect)
+      navigate('/home');
+    } catch (err: unknown) {
+      let errorMessage = 'Login failed.';
+      if (err instanceof Error) {
+        errorMessage = `Login failed: ${err.message}`;
+      } else if (typeof err === 'string') {
+        errorMessage = `Login failed: ${err}`;
+      } else {
+        errorMessage = 'An unknown error occurred during login.';
+      }
+      setSnackbar({ message: errorMessage, type: 'error' }); // Show error snackbar
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = (name: string, email: string, password: string) => {
-    // TODO: Implement signup logic
-    console.log('Signup attempt:', { name, email, password });
-    navigate('/home');
+  const handleSignUp = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    setSnackbar(null); // Clear previous snackbars
+    try {
+      // Assuming the signup endpoint expects 'username' instead of 'name' based on your image
+      const response = await signup({ email, username: name, password });
+      console.log('Signup successful:', response);
+      // Show success snackbar
+      setSnackbar({ message: 'Sign up successful! Please log in.', type: 'success' });
+      // TODO: Handle successful signup (e.g., show success message, redirect to login)
+      // alert('Sign up successful! Please log in.'); // Removed alert
+      setIsLogin(true); // Switch to login form after successful signup
+    } catch (err: unknown) {
+      let errorMessage = 'Sign up failed.';
+      if (err instanceof Error) {
+        errorMessage = `Sign up failed: ${err.message}`;
+      } else if (typeof err === 'string') {
+        errorMessage = `Sign up failed: ${err}`;
+      } else {
+         errorMessage = 'An unknown error occurred during sign up.';
+      }
+      setSnackbar({ message: errorMessage, type: 'error' }); // Show error snackbar
+      console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContinueAsGuest = () => {
@@ -25,10 +71,17 @@ const AuthPage: React.FC = () => {
     navigate('/home');
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbar(null);
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-container">
-        {isLogin ? (
+        {/* Removed error message display: {error && <p className="error-message">{error}</p>} */}
+        {loading ? (
+          <p>Loading...</p>
+        ) : isLogin ? (
           <LoginForm
             onLogin={handleLogin}
             onSwitchToSignUp={() => setIsLogin(false)}
@@ -41,6 +94,14 @@ const AuthPage: React.FC = () => {
           />
         )}
       </div>
+      {/* Render Snackbar */}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={handleSnackbarClose}
+        />
+      )}
     </div>
   );
 };

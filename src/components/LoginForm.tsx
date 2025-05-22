@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 
 interface LoginFormProps {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (username: string, password: string) => void;
   onSwitchToSignUp: () => void;
   onContinueAsGuest: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToSignUp, onContinueAsGuest }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(email, password);
+    onLogin(username, password);
   };
 
   return (
@@ -20,13 +20,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToSignUp, onCont
       <h2>Welcome Back</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="username">Username</label>
           <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
             required
           />
         </div>
