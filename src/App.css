@@ -180,6 +180,7 @@
   width: 100%;
   max-width: 220px;
   text-align: center;
+  cursor: pointer;
 }
 
 .movie-card .movie-title {
@@ -228,4 +229,91 @@
 
 .load-more-button:hover {
   background-color: #0056b3;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d3748; /* Dark background for the modal */
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #a0aec0;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  color: #ffffff;
+}
+
+.movie-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.movie-details h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.movie-detail-poster {
+  max-width: 200px;
+  height: auto;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.movie-details p {
+  margin-bottom: 0.5rem;
+  color: #a0aec0;
+}
+
+.movie-details p strong {
+  color: white;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center stars below the title */
+}
+
+.star {
+  font-size: 1.2rem; /* Adjust star size */
+  margin: 0 2px; /* Space between stars */
+}
+
+.star.filled {
+  color: #ffc107; /* Yellow color for filled stars */
+}
+
+.star.empty {
+  color: #a0aec0; /* Grey color for empty stars */
 }
