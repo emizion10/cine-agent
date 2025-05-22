@@ -7,10 +7,12 @@ interface MovieCardProps {
   movieId: number;
   rating: number;
   onCardClick: (movieId: number) => void;
+  isInWatchlist: boolean;
+  onToggleWatchlist: (movieId: number) => void;
   // Add other movie details like image, etc.
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ title, imageUrl, movieId, rating, onCardClick }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ title, imageUrl, movieId, rating, onCardClick, isInWatchlist, onToggleWatchlist }) => {
   return (
     <div className="movie-card" onClick={() => onCardClick(movieId)}>
       <div className="movie-image-placeholder">
@@ -19,7 +21,18 @@ const MovieCard: React.FC<MovieCardProps> = ({ title, imageUrl, movieId, rating,
         ) : (
           <span>No Image Available</span>
         )}
-        <div className="options-button">...</div>
+        <button className="options-button" onClick={(e) => {
+            e.stopPropagation();
+        }}>...</button>
+        <button 
+            className={`watchlist-button ${isInWatchlist ? 'in-watchlist' : ''}`} 
+            onClick={(e) => {
+                e.stopPropagation();
+                onToggleWatchlist(movieId);
+            }}
+        >
+            {isInWatchlist ? '-' : '+'}
+        </button>
       </div>
       <div className="movie-content-area">
         <div className="movie-title">{title}</div>

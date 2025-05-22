@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
+import WatchlistView from './pages/WatchlistView';
 import './App.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/watchlist" element={<WatchlistView />} />
         <Route path="/" element={<Navigate to="/auth" replace />} />
       </Routes>
     </div>

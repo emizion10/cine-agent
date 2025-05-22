@@ -21,10 +21,10 @@ const Header: React.FC = () => {
       <h1>{/* Removed unnecessary h1 tag */}</h1>
       <nav>
         <ul>
-          <li><a href="#" className="button dashboard-button">Dashboard</a></li>
+          <li><Link to="/home" className="button dashboard-button">Dashboard</Link></li>
           
           {isAuthenticated && (
-            <li><a href="#">My Watchlist (0)</a></li>
+            <li><Link to="/watchlist">My Watchlist</Link></li>
           )}
 
           {isAuthenticated ? (
