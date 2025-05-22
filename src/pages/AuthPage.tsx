@@ -4,12 +4,14 @@ import LoginForm from '../components/LoginForm';
 import SignUpForm from '../components/SignUpForm';
 import Snackbar from '../components/Snackbar'; // Import Snackbar component
 import { login, signup } from '../services/authService'; // Import auth service functions
+import { useAuth } from '../context/AuthContext'; // Import useAuth hook
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null); // State for Snackbar
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth(); // Use the login function from auth context
 
   const handleLogin = async (username: string, password: string) => {
     setLoading(true);
@@ -17,9 +19,13 @@ const AuthPage: React.FC = () => {
     try {
       const response = await login({ username, password });
       console.log('Login successful:', response);
-      // Show success snackbar
+      
+      // Call the login function from auth context to store token and set auth state
+      authLogin(response.token, username); // Pass username obtained from the form
+
       setSnackbar({ message: 'Login successful!', type: 'success' });
-      // TODO: Handle successful login (e.g., store token, redirect)
+      // Redirect handled by AuthProvider or a protected route setup (future)
+      // For now, we navigate here after setting auth state
       navigate('/home');
     } catch (err: unknown) {
       let errorMessage = 'Login failed.';
@@ -41,13 +47,10 @@ const AuthPage: React.FC = () => {
     setLoading(true);
     setSnackbar(null); // Clear previous snackbars
     try {
-      // Assuming the signup endpoint expects 'username' instead of 'name' based on your image
       const response = await signup({ email, username: name, password });
       console.log('Signup successful:', response);
-      // Show success snackbar
+      
       setSnackbar({ message: 'Sign up successful! Please log in.', type: 'success' });
-      // TODO: Handle successful signup (e.g., show success message, redirect to login)
-      // alert('Sign up successful! Please log in.'); // Removed alert
       setIsLogin(true); // Switch to login form after successful signup
     } catch (err: unknown) {
       let errorMessage = 'Sign up failed.';
@@ -66,8 +69,9 @@ const AuthPage: React.FC = () => {
   };
 
   const handleContinueAsGuest = () => {
-    // TODO: Implement guest session logic
+    // TODO: Implement guest session logic in AuthContext if needed
     console.log('Continuing as guest');
+    // For now, just navigate to home without setting auth state
     navigate('/home');
   };
 
