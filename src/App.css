@@ -175,7 +175,6 @@
 .movie-card {
   background-color: #2d3748;
   border-radius: 5px;
-  padding: 10px;
   margin: 0;
   width: 100%;
   max-width: 220px;
@@ -183,23 +182,24 @@
   cursor: pointer;
 }
 
+.movie-card .movie-content-area {
+  padding: 10px;
+}
+
 .movie-card .movie-title {
-  margin-top: 10px;
+  margin-top: 0;
   font-weight: bold;
 }
 
 .movie-image-placeholder {
   width: 100%;
-  height: 250px; /* Placeholder height, adjust as needed */
-  background-color: #4a5568; /* Darker placeholder color */
+  height: 250px;
+  background-color: #4a5568;
   position: relative;
-  display: flex;
-  justify-content: flex-end; /* Align options button to the right */
-  align-items: flex-end; /* Align options button to the bottom */
 }
 
 .options-button {
-  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
   border-radius: 50%;
   width: 30px;
@@ -207,7 +207,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 10px; /* Add some space from the edges */
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  margin: 0;
   cursor: pointer;
 }
 
@@ -302,18 +305,40 @@
 .star-rating {
   display: flex;
   align-items: center;
-  justify-content: center; /* Center stars below the title */
+  justify-content: center;
+  margin-top: 5px;
 }
 
 .star {
-  font-size: 1.2rem; /* Adjust star size */
-  margin: 0 2px; /* Space between stars */
+  font-size: 1.2rem;
+  margin: 0 2px;
 }
 
 .star.filled {
-  color: #ffc107; /* Yellow color for filled stars */
+  color: #ffc107;
 }
 
 .star.empty {
-  color: #a0aec0; /* Grey color for empty stars */
+  color: #a0aec0;
+}
+
+.circular-progress-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.circular-progress {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

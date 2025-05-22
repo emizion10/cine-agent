@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
 import MovieDetailModal from '../components/MovieDetailModal';
+import CircularProgress from '../components/CircularProgress';
 import { getPopularMovies, searchMovies, type Movie, type PaginatedResponse } from '../services/movieService';
 
 const HomePage: React.FC = () => {
@@ -79,19 +80,25 @@ const HomePage: React.FC = () => {
       <section className="curated-picks">
         <h2>AI-Curated Picks for You</h2>
         {error && <p className="error-message">Error: {error}</p>}
-        {loading && <p>Loading movies...</p>}
-        {!loading && movies.length === 0 && !error && <p>No movies found.</p>}
-        <div className="movie-list-grid">
-          {movies.map((movie) => (
-            <MovieCard key={movie.id} movieId={movie.id} title={movie.title} imageUrl={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : undefined} rating={movie.vote_average} onCardClick={handleCardClick} />
-          ))}
-        </div>
-        {movies.length > 0 && currentPage < totalPages && (
-          <div className="load-more-container">
-            <button onClick={handleLoadMore} className="load-more-button" disabled={loading}>
-              {loading ? 'Loading...' : 'Load More'}
-            </button>
-          </div>
+        
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <>
+            {!loading && movies.length === 0 && !error && <p>No movies found.</p>}
+            <div className="movie-list-grid">
+              {movies.map((movie) => (
+                <MovieCard key={movie.id} movieId={movie.id} title={movie.title} imageUrl={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : undefined} rating={movie.vote_average} onCardClick={handleCardClick} />
+              ))}
+            </div>
+            {movies.length > 0 && currentPage < totalPages && (
+              <div className="load-more-container">
+                <button onClick={handleLoadMore} className="load-more-button" disabled={loading}>
+                  {loading ? 'Loading...' : 'Load More'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
       <MovieDetailModal movieId={selectedMovieId} onClose={handleCloseModal} />

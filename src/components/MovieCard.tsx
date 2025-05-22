@@ -21,8 +21,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ title, imageUrl, movieId, rating,
         )}
         <div className="options-button">...</div>
       </div>
-      <div className="movie-title">{title}</div>
-      <StarRating rating={rating} />
+      <div className="movie-content-area">
+        <div className="movie-title">{title}</div>
+        <StarRating rating={rating} />
+      </div>
     </div>
   );
 };
