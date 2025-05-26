@@ -6,8 +6,10 @@ import MovieDetailModal from '../components/MovieDetailModal';
 import CircularProgress from '../components/CircularProgress';
 import { getPopularMovies, searchMovies, type Movie, type PaginatedResponse } from '../services/movieService';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../services/watchlistService';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage: React.FC = () => {
+  const { isAuthenticated, token } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,16 +20,25 @@ const HomePage: React.FC = () => {
   const [watchlist, setWatchlist] = useState<number[]>([]);
 
   useEffect(() => {
+    console.log('HomePage useEffect (watchlist): isAuthenticated', isAuthenticated, 'token', token);
     const fetchWatchlist = async () => {
       try {
-        const userWatchlist = await getWatchlist();
+        const userWatchlist = await getWatchlist(token);
         setWatchlist(userWatchlist.map(movie => movie.id));
       } catch (err) {
         console.error('Failed to fetch watchlist:', err);
       }
     };
-    fetchWatchlist();
-  }, []);
+    
+    if (isAuthenticated && token) {
+        console.log('HomePage useEffect (watchlist): Fetching watchlist...');
+        fetchWatchlist();
+    } else {
+        console.log('HomePage useEffect (watchlist): Not authenticated or token missing, clearing watchlist.');
+        setWatchlist([]);
+    }
+
+  }, [isAuthenticated, token]);
 
   const fetchMovies = async (query: string = '', page: number = 1) => {
     setLoading(true);
@@ -60,10 +71,13 @@ const HomePage: React.FC = () => {
   };
 
   useEffect(() => {
-    if(watchlist.length >= 0) {
-      fetchMovies();
-    }
-  }, [watchlist.length]);
+     console.log('HomePage useEffect (movies): isAuthenticated', isAuthenticated);
+     if(isAuthenticated) {
+         fetchMovies();
+     } else {
+         setMovies([]);
+     }
+  }, [isAuthenticated]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -86,23 +100,29 @@ const HomePage: React.FC = () => {
   };
 
   const handleToggleWatchlist = useCallback(async (movieId: number) => {
+    console.log('handleToggleWatchlist: isAuthenticated', isAuthenticated, 'token', token);
+    if (!isAuthenticated || !token) {
+         console.warn('User not authenticated or token missing, cannot toggle watchlist.');
+         return;
+     }
+
     const movieToToggle = movies.find(movie => movie.id === movieId);
     if (!movieToToggle) return;
 
     try {
       if (watchlist.includes(movieId)) {
-        await removeFromWatchlist(movieId);
+        await removeFromWatchlist(movieId, token);
         setWatchlist(prevWatchlist => prevWatchlist.filter(id => id !== movieId));
         console.log(`Removed ${movieToToggle.title} from watchlist`);
       } else {
-        await addToWatchlist(movieToToggle);
+        await addToWatchlist(movieToToggle, token);
         setWatchlist(prevWatchlist => [...prevWatchlist, movieId]);
         console.log(`Added ${movieToToggle.title} to watchlist`);
       }
     } catch (error) {
       console.error('Failed to toggle watchlist:', error);
     }
-  }, [movies, watchlist]);
+  }, [movies, watchlist, isAuthenticated, token]);
 
   return (
     <div className="home-page">

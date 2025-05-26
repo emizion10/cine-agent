@@ -1,49 +1,82 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getToken, storeAuthData, removeAuthData, getUsername } from '../utils/authStorage';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { login as authLogin, logout as authLogout } from '../services/authService';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
-  login: (token: string, username: string) => void;
+  token: string | null;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  // Check for token and username on initial load
+  // Check for token in localStorage on initial load
   useEffect(() => {
-    const token = getToken();
-    const storedUsername = getUsername(); // Get username from storage
-
-    if (token && storedUsername) {
-      // In a real app, you would validate the token with your backend
-      // For this example, we'll just assume a valid token and stored username means authenticated
+    const storedToken = localStorage.getItem('token');
+    const storedUsername = localStorage.getItem('username'); // Assuming username is also stored
+    if (storedToken) {
+      console.log('AuthContext: Found token in localStorage on load.', storedToken);
+      setToken(storedToken);
       setIsAuthenticated(true);
-      setUsername(storedUsername); // Set username from storage
-    } else {
-      // Clear storage if only one is present (inconsistent state)
-      removeAuthData();
+      // If username is stored, load it
+      if (storedUsername) {
+          setUsername(storedUsername);
+      }
     }
   }, []);
 
-  const login = (token: string, username: string) => {
-    storeAuthData(token, username); // Store both token and username
-    setIsAuthenticated(true);
-    setUsername(username);
+  const login = async (user: string, pass: string) => {
+    try {
+      // Call the login service (which now stores token in localStorage)
+      await authLogin({ username: user, password: pass });
+      
+      // Retrieve token and potentially username from localStorage after successful login
+      const storedToken = localStorage.getItem('token');
+      const storedUsername = localStorage.getItem('username'); // Assuming backend returns and service stores username
+
+      if (storedToken) {
+          console.log('AuthContext: Token found in localStorage after successful login.', storedToken);
+          setToken(storedToken);
+          setIsAuthenticated(true);
+          if (storedUsername) {
+              setUsername(storedUsername);
+          } else {
+              // Handle case where username is not returned/stored by service
+              setUsername(user); // Use the username from input as a fallback
+          }
+      } else {
+          // This case should ideally not happen if authLogin stored the token
+           console.error('AuthContext: Login successful, but token not found in localStorage.');
+           setIsAuthenticated(false);
+           setUsername(null);
+           setToken(null);
+      }
+
+    } catch (error) {
+      console.error('AuthContext: Login failed:', error);
+      setIsAuthenticated(false);
+      setUsername(null);
+      setToken(null);
+      throw error; // Re-throw to be caught by UI components
+    }
   };
 
   const logout = () => {
-    removeAuthData(); // Remove both token and username
+    authLogout(); // Call the logout service (which removes from localStorage)
     setIsAuthenticated(false);
     setUsername(null);
+    setToken(null);
+    console.log('AuthContext: User logged out, token cleared.');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, username, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, username, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

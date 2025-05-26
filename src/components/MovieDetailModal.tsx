@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getMovieDetails, type Movie } from '../services/movieService';
 import StarRating from './StarRating';
 import { addToWatchlist, removeFromWatchlist, isInWatchlist } from '../services/watchlistService';
+import { useAuth } from '../context/AuthContext';
 
 interface MovieDetailModalProps {
   movieId: number | null;
@@ -9,6 +10,7 @@ interface MovieDetailModalProps {
 }
 
 const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose }) => {
+  const { isAuthenticated, token } = useAuth();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +29,12 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
       try {
         const movieData = await getMovieDetails(movieId);
         setMovie(movieData);
-        const inWatchlist = await isInWatchlist(movieId);
-        setIsMovieInWatchlist(inWatchlist);
+        if (isAuthenticated && token) {
+          const inWatchlist = await isInWatchlist(movieId, token);
+          setIsMovieInWatchlist(inWatchlist);
+        } else {
+          setIsMovieInWatchlist(false);
+        }
       } catch (err: unknown) {
         let errorMessage = 'An unknown error occurred';
         if (err instanceof Error) {
@@ -42,18 +48,23 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
     };
 
     fetchDetails();
-  }, [movieId]);
+  }, [movieId, isAuthenticated, token]);
 
   const handleToggleWatchlist = async () => {
+    if (!isAuthenticated || !token) {
+      console.warn('User not authenticated or token missing, cannot toggle watchlist.');
+      return;
+    }
+
     if (!movie) return;
 
     try {
       if (isMovieInWatchlist) {
-        await removeFromWatchlist(movie.id);
+        await removeFromWatchlist(movie.id, token);
         setIsMovieInWatchlist(false);
         console.log(`Removed ${movie.title} from watchlist`);
       } else {
-        await addToWatchlist(movie);
+        await addToWatchlist(movie, token);
         setIsMovieInWatchlist(true);
         console.log(`Added ${movie.title} to watchlist`);
       }
@@ -78,7 +89,7 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
             <button 
               className={`watchlist-button modal-button ${isMovieInWatchlist ? 'in-watchlist' : ''}`} 
               onClick={handleToggleWatchlist}
-              disabled={loading}
+              disabled={loading || !isAuthenticated || !token}
             >
               {isMovieInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
             </button>

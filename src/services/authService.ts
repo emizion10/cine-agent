@@ -2,7 +2,7 @@ const BASE_URL = 'http://localhost:8000/api/v1/auth';
 
 interface AuthResponse {
   token: string;
-  // Add other properties expected in the auth response
+  // Add other properties expected in the auth response, like username
 }
 
 interface SignupRequest {
@@ -19,7 +19,8 @@ interface LoginRequest {
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Authentication failed');
+    // Use a more specific error message if available from the backend
+    throw new Error(error.detail || error.message || 'Authentication failed');
   }
   return response.json();
 };
@@ -32,7 +33,10 @@ export const signup = async (credentials: SignupRequest): Promise<AuthResponse> 
     },
     body: JSON.stringify(credentials),
   });
-  return handleResponse<AuthResponse>(response);
+   const data = await handleResponse<AuthResponse>(response);
+   // Optionally store token after successful signup as well
+   // localStorage.setItem('token', data.token);
+   return data;
 };
 
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
@@ -49,7 +53,20 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
     },
     body: formBody, // Send form data
   });
-  return handleResponse<AuthResponse>(response);
+  
+  const data = await handleResponse<AuthResponse>(response);
+  localStorage.setItem('token', data.token); // Store the token in localStorage
+  // If the backend returns username or other user info, store that as well
+  // if (data.username) {
+  //   localStorage.setItem('username', data.username);
+  // }
+
+  return data;
 };
 
-// You might also want functions for logout, getting user info, etc. here later 
+export const logout = (): void => {
+  localStorage.removeItem('token'); // Remove token on logout
+  localStorage.removeItem('username'); // Remove username on logout
+};
+
+// You might also want functions for getting user info, etc. here later 
