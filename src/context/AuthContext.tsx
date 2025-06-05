@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { login as authLogin, logout as authLogout } from '../services/authService';
+import { getUsername } from '../utils/authStorage';
+import { getToken } from '../utils/authStorage';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -16,12 +18,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [username, setUsername] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // Check for token in localStorage on initial load
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username'); // Assuming username is also stored
+    const storedToken = getToken();
+    const storedUsername = getUsername(); 
     if (storedToken) {
-      console.log('AuthContext: Found token in localStorage on load.', storedToken);
       setToken(storedToken);
       setIsAuthenticated(true);
       // If username is stored, load it
@@ -33,26 +33,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (user: string, pass: string) => {
     try {
-      // Call the login service (which now stores token in localStorage)
       await authLogin({ username: user, password: pass });
-      
-      // Retrieve token and potentially username from localStorage after successful login
-      const storedToken = localStorage.getItem('token');
-      const storedUsername = localStorage.getItem('username'); // Assuming backend returns and service stores username
+      const storedToken = getToken();
+      const storedUsername = getUsername();
 
       if (storedToken) {
-          console.log('AuthContext: Token found in localStorage after successful login.', storedToken);
           setToken(storedToken);
           setIsAuthenticated(true);
           if (storedUsername) {
               setUsername(storedUsername);
-          } else {
-              // Handle case where username is not returned/stored by service
-              setUsername(user); // Use the username from input as a fallback
           }
       } else {
-          // This case should ideally not happen if authLogin stored the token
-           console.error('AuthContext: Login successful, but token not found in localStorage.');
            setIsAuthenticated(false);
            setUsername(null);
            setToken(null);
@@ -68,7 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    authLogout(); // Call the logout service (which removes from localStorage)
+    authLogout();
     setIsAuthenticated(false);
     setUsername(null);
     setToken(null);

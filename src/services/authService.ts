@@ -1,8 +1,14 @@
+import { removeAuthData, storeAuthData } from "../utils/authStorage";
+
 const BASE_URL = 'http://localhost:8000/api/v1/auth';
 
 interface AuthResponse {
-  token: string;
-  // Add other properties expected in the auth response, like username
+  access_token: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
 }
 
 interface SignupRequest {
@@ -34,8 +40,7 @@ export const signup = async (credentials: SignupRequest): Promise<AuthResponse> 
     body: JSON.stringify(credentials),
   });
    const data = await handleResponse<AuthResponse>(response);
-   // Optionally store token after successful signup as well
-   // localStorage.setItem('token', data.token);
+   storeAuthData(data.access_token, data.user.username);
    return data;
 };
 
@@ -55,18 +60,12 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
   });
   
   const data = await handleResponse<AuthResponse>(response);
-  localStorage.setItem('token', data.token); // Store the token in localStorage
-  // If the backend returns username or other user info, store that as well
-  // if (data.username) {
-  //   localStorage.setItem('username', data.username);
-  // }
-
+  storeAuthData(data.access_token, data.user.username);
   return data;
 };
 
 export const logout = (): void => {
-  localStorage.removeItem('token'); // Remove token on logout
-  localStorage.removeItem('username'); // Remove username on logout
+  removeAuthData();
 };
 
 // You might also want functions for getting user info, etc. here later 

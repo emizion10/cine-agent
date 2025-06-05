@@ -5,7 +5,7 @@ import MovieCard from '../components/MovieCard';
 import MovieDetailModal from '../components/MovieDetailModal';
 import CircularProgress from '../components/CircularProgress';
 import { getPopularMovies, searchMovies, type Movie, type PaginatedResponse } from '../services/movieService';
-import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../services/watchlistService';
+import { getWatchlist, addToWatchlist, removeFromWatchlist, WatchStatus } from '../services/watchlistService';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage: React.FC = () => {
@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
     console.log('HomePage useEffect (watchlist): isAuthenticated', isAuthenticated, 'token', token);
     const fetchWatchlist = async () => {
       try {
-        const userWatchlist = await getWatchlist(token);
+        const userWatchlist = await getWatchlist();
         setWatchlist(userWatchlist.map(movie => movie.id));
       } catch (err) {
         console.error('Failed to fetch watchlist:', err);
@@ -111,11 +111,11 @@ const HomePage: React.FC = () => {
 
     try {
       if (watchlist.includes(movieId)) {
-        await removeFromWatchlist(movieId, token);
+        await removeFromWatchlist(movieId);
         setWatchlist(prevWatchlist => prevWatchlist.filter(id => id !== movieId));
         console.log(`Removed ${movieToToggle.title} from watchlist`);
       } else {
-        await addToWatchlist(movieToToggle, token);
+        await addToWatchlist(movieToToggle, WatchStatus.PENDING);
         setWatchlist(prevWatchlist => [...prevWatchlist, movieId]);
         console.log(`Added ${movieToToggle.title} to watchlist`);
       }

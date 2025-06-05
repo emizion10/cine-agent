@@ -1,15 +1,31 @@
-import { type Movie } from './movieService'; // Assuming Movie interface is used, use type-only import
+import { type Movie, getMovieDetails } from './movieService';
+import { getToken } from '../utils/authStorage';
 
-// const WATCHLIST_STORAGE_KEY = 'cineAgentWatchlist'; // Remove mock key
+// Add WatchStatus enum to match backend
+export enum WatchStatus {
+  PENDING = "pending",
+  WATCHING = "watching",
+  WATCHED = "watched",
+  DROPPED = "dropped"
+}
 
-const API_BASE_URL = 'http://localhost:8000/api/v1'; // Assuming API runs on localhost:8000
+interface WatchlistEntry {
+  movie_id: number;
+  status: WatchStatus;
+  id: number;
+  user_id: number;
+  created_at: string;
+  updated_at: string | null;
+}
+
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 /**
- * Fetches the current user's watchlist.
- * @param token The authentication token.
+ * Fetches the current user's watchlist with movie details.
  * @returns A promise resolving to an array of Movie objects.
  */
-export const getWatchlist = async (token: string | null): Promise<Movie[]> => {
+export const getWatchlist = async (): Promise<Movie[]> => {
+  const token = getToken();
   if (!token) {
     console.error('No auth token provided.');
     return [];
@@ -28,56 +44,60 @@ export const getWatchlist = async (token: string | null): Promise<Movie[]> => {
     throw new Error('Failed to fetch watchlist');
   }
 
-  const data = await response.json();
-  // Assuming the API returns an array of movie objects directly
-  return data;
+  const watchlistEntries: WatchlistEntry[] = await response.json();
+  
+  // Fetch movie details for each entry
+  const moviePromises = watchlistEntries.map(entry => getMovieDetails(entry.movie_id));
+  const movies = await Promise.all(moviePromises);
+  
+  return movies;
 };
 
 /**
  * Adds a movie to the watchlist.
  * @param movie The movie object to add.
- * @param token The authentication token.
- * @returns A promise resolving to void (or the updated watchlist from backend if API returns it).
+ * @param status The status of the movie in the watchlist.
+ * @returns A promise resolving to void.
  */
-export const addToWatchlist = async (movie: Movie, token: string | null): Promise<void> => {
-   if (!token) {
-     console.error('No auth token provided.');
-     throw new Error('User not authenticated');
-   }
+export const addToWatchlist = async (movie: Movie, status: WatchStatus = WatchStatus.PENDING): Promise<void> => {
+  const token = getToken();
+  if (!token) {
+    console.error('No auth token provided.');
+    throw new Error('User not authenticated');
+  }
 
   const response = await fetch(`${API_BASE_URL}/watchlist/${movie.id}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
-       // The API might not expect a body for POST to {movie_id}, or might expect minimal data
-       // Based on endpoint description, just sending the ID in the URL seems sufficient.
-      // 'Content-Type': 'application/json',
-      // body: JSON.stringify({ movie_id: movie.id }), // Example if body is needed
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ 
+      movie_id: movie.id,
+      status: status 
+    }),
   });
 
   if (!response.ok) {
-     // TODO: Handle specific API errors
-     console.error('Failed to add movie to watchlist:', response.status, response.statusText);
-     throw new Error('Failed to add movie to watchlist');
-   }
+    // TODO: Handle specific API errors
+    console.error('Failed to add movie to watchlist:', response.status, response.statusText);
+    throw new Error('Failed to add movie to watchlist');
+  }
 
-   // Assuming the API returns a success status or the updated item/list
-   // If it returns nothing, we can just resolve the promise after successful response.
-   return;
+  return;
 };
 
 /**
  * Removes a movie from the watchlist.
  * @param movieId The ID of the movie to remove.
- * @param token The authentication token.
- * @returns A promise resolving to void (or the updated watchlist from backend).
+ * @returns A promise resolving to void.
  */
-export const removeFromWatchlist = async (movieId: number, token: string | null): Promise<void> => {
-   if (!token) {
-     console.error('No auth token provided.');
-     throw new Error('User not authenticated');
-   }
+export const removeFromWatchlist = async (movieId: number): Promise<void> => {
+  const token = getToken();
+  if (!token) {
+    console.error('No auth token provided.');
+    throw new Error('User not authenticated');
+  }
 
   const response = await fetch(`${API_BASE_URL}/watchlist/${movieId}`, {
     method: 'DELETE',
@@ -88,33 +108,32 @@ export const removeFromWatchlist = async (movieId: number, token: string | null)
   });
 
   if (!response.ok) {
-     // TODO: Handle specific API errors
-     console.error('Failed to remove movie from watchlist:', response.status, response.statusText);
-     throw new Error('Failed to remove movie from watchlist');
-   }
+    // TODO: Handle specific API errors
+    console.error('Failed to remove movie from watchlist:', response.status, response.statusText);
+    throw new Error('Failed to remove movie from watchlist');
+  }
 
-   // Assuming the API returns a success status
-    return;
+  // Assuming the API returns a success status
+  return;
 };
 
 /**
  * Checks if a movie is in the watchlist.
- * This is now implemented by fetching the full watchlist and checking locally.
  * @param movieId The ID of the movie to check.
- * @param token The authentication token.
  * @returns A promise resolving to a boolean indicating if the movie is in the watchlist.
  */
-export const isInWatchlist = async (movieId: number, token: string | null): Promise<boolean> => {
-   if (!token) {
-     console.error('No auth token provided for isInWatchlist.');
-     return false;
-   }
-   try {
-      const watchlist = await getWatchlist(token);
-      return watchlist.some(item => item.id === movieId);
-   } catch (error) {
-       console.error('Error checking if movie is in watchlist:', error);
-       // Depending on desired behavior, return false or rethrow error
-       return false;
-   }
+export const isInWatchlist = async (movieId: number): Promise<boolean> => {
+  const token = getToken();
+  if (!token) {
+    console.error('No auth token provided for isInWatchlist.');
+    return false;
+  }
+  try {
+    const watchlist = await getWatchlist();
+    return watchlist.some(item => item.id === movieId);
+  } catch (error) {
+    console.error('Error checking if movie is in watchlist:', error);
+    // Depending on desired behavior, return false or rethrow error
+    return false;
+  }
 }; 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getMovieDetails, type Movie } from '../services/movieService';
 import StarRating from './StarRating';
-import { addToWatchlist, removeFromWatchlist, isInWatchlist } from '../services/watchlistService';
+import { addToWatchlist, removeFromWatchlist, isInWatchlist, WatchStatus } from '../services/watchlistService';
 import { useAuth } from '../context/AuthContext';
 
 interface MovieDetailModalProps {
@@ -29,8 +29,8 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
       try {
         const movieData = await getMovieDetails(movieId);
         setMovie(movieData);
-        if (isAuthenticated && token) {
-          const inWatchlist = await isInWatchlist(movieId, token);
+        if (isAuthenticated) {
+          const inWatchlist = await isInWatchlist(movieId);
           setIsMovieInWatchlist(inWatchlist);
         } else {
           setIsMovieInWatchlist(false);
@@ -60,11 +60,11 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
 
     try {
       if (isMovieInWatchlist) {
-        await removeFromWatchlist(movie.id, token);
+        await removeFromWatchlist(movie.id);
         setIsMovieInWatchlist(false);
         console.log(`Removed ${movie.title} from watchlist`);
       } else {
-        await addToWatchlist(movie, token);
+        await addToWatchlist(movie, WatchStatus.PENDING);
         setIsMovieInWatchlist(true);
         console.log(`Added ${movie.title} to watchlist`);
       }

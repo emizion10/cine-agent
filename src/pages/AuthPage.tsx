@@ -2,31 +2,22 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import SignUpForm from '../components/SignUpForm';
-import Snackbar from '../components/Snackbar'; // Import Snackbar component
-import { login, signup } from '../services/authService'; // Import auth service functions
-import { useAuth } from '../context/AuthContext'; // Import useAuth hook
-import CineAgentLogo from '../assets/svg/logo.svg'; // Import the SVG as an image source
+import Snackbar from '../components/Snackbar'; 
+import { login, signup } from '../services/authService'; 
+import CineAgentLogo from '../assets/svg/logo.svg'; 
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null); // State for Snackbar
   const navigate = useNavigate();
-  const { login: authLogin } = useAuth(); // Use the login function from auth context
 
   const handleLogin = async (username: string, password: string) => {
     setLoading(true);
     setSnackbar(null); // Clear previous snackbars
     try {
-      const response = await login({ username, password });
-      console.log('Login successful:', response);
-      
-      // Call the login function from auth context to store token and set auth state
-      authLogin(response.token, username); // Pass username obtained from the form
-
-      setSnackbar({ message: 'Login successful!', type: 'success' });
-      // Redirect handled by AuthProvider or a protected route setup (future)
-      // For now, we navigate here after setting auth state
+      await login({ username, password });
+        setSnackbar({ message: 'Login successful!', type: 'success' });
       navigate('/home');
     } catch (err: unknown) {
       let errorMessage = 'Login failed.';
