@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { getMovieDetails, type Movie } from '../services/movieService';
+import { getMovieDetails } from '../services/movieService';
 import StarRating from './StarRating';
-import { addToWatchlist, removeFromWatchlist, isInWatchlist, WatchStatus } from '../services/watchlistService';
+import { 
+  addToWatchlist, 
+  removeFromWatchlist, 
+  WatchStatus, 
+  updateWatchlistStatus, 
+  type WatchlistMovie,
+  getWatchlist 
+} from '../services/watchlistService';
 import { useAuth } from '../context/AuthContext';
+import StatusSelector from './StatusSelector';
 
 interface MovieDetailModalProps {
   movieId: number | null;
@@ -11,7 +19,7 @@ interface MovieDetailModalProps {
 
 const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose }) => {
   const { isAuthenticated, token } = useAuth();
-  const [movie, setMovie] = useState<Movie | null>(null);
+  const [movie, setMovie] = useState<WatchlistMovie | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMovieInWatchlist, setIsMovieInWatchlist] = useState(false);
@@ -28,11 +36,30 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
       setError(null);
       try {
         const movieData = await getMovieDetails(movieId);
-        setMovie(movieData);
         if (isAuthenticated) {
-          const inWatchlist = await isInWatchlist(movieId);
-          setIsMovieInWatchlist(inWatchlist);
+          const watchlist = await getWatchlist();
+          const watchlistEntry = watchlist.find(item => item.id === movieId);
+          if (watchlistEntry) {
+            setMovie({
+              ...movieData,
+              watchlistStatus: watchlistEntry.watchlistStatus,
+              watchlistId: watchlistEntry.watchlistId
+            });
+            setIsMovieInWatchlist(true);
+          } else {
+            setMovie({
+              ...movieData,
+              watchlistStatus: WatchStatus.PENDING,
+              watchlistId: 0
+            });
+            setIsMovieInWatchlist(false);
+          }
         } else {
+          setMovie({
+            ...movieData,
+            watchlistStatus: WatchStatus.PENDING,
+            watchlistId: 0
+          });
           setIsMovieInWatchlist(false);
         }
       } catch (err: unknown) {
@@ -73,6 +100,17 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
     }
   };
 
+  const handleStatusChange = async (newStatus: WatchStatus) => {
+    if (!movie) return;
+    
+    try {
+      await updateWatchlistStatus(movie.id, newStatus);
+      setMovie(prev => prev ? { ...prev, watchlistStatus: newStatus } : null);
+    } catch (error) {
+      console.error('Failed to update watchlist status:', error);
+    }
+  };
+
   if (movieId === null) {
     return null;
   }
@@ -86,13 +124,22 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movieId, onClose })
         {movie && (
           <div className="movie-details">
             <h2>{movie.title}</h2>
-            <button 
-              className={`watchlist-button modal-button ${isMovieInWatchlist ? 'in-watchlist' : ''}`} 
-              onClick={handleToggleWatchlist}
-              disabled={loading || !isAuthenticated || !token}
-            >
-              {isMovieInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
-            </button>
+            <div className="modal-actions">
+              <button 
+                className={`modal-button ${isMovieInWatchlist ? 'in-watchlist' : ''}`} 
+                onClick={handleToggleWatchlist}
+                disabled={loading || !isAuthenticated || !token}
+              >
+                {isMovieInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+              </button>
+              {isMovieInWatchlist && (
+                <StatusSelector
+                  value={movie.watchlistStatus}
+                  onChange={handleStatusChange}
+                  disabled={loading || !isAuthenticated || !token}
+                />
+              )}
+            </div>
             {movie.poster_path && (
               <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="movie-detail-poster" />
             )}

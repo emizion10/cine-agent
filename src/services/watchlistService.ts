@@ -18,13 +18,18 @@ interface WatchlistEntry {
   updated_at: string | null;
 }
 
+export interface WatchlistMovie extends Movie {
+  watchlistStatus: WatchStatus;
+  watchlistId: number;
+}
+
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 /**
  * Fetches the current user's watchlist with movie details.
- * @returns A promise resolving to an array of Movie objects.
+ * @returns A promise resolving to an array of WatchlistMovie objects.
  */
-export const getWatchlist = async (): Promise<Movie[]> => {
+export const getWatchlist = async (): Promise<WatchlistMovie[]> => {
   const token = getToken();
   if (!token) {
     console.error('No auth token provided.');
@@ -47,9 +52,16 @@ export const getWatchlist = async (): Promise<Movie[]> => {
   const watchlistEntries: WatchlistEntry[] = await response.json();
   
   // Fetch movie details for each entry
-  const moviePromises = watchlistEntries.map(entry => getMovieDetails(entry.movie_id));
-  const movies = await Promise.all(moviePromises);
+  const moviePromises = watchlistEntries.map(async entry => {
+    const movie = await getMovieDetails(entry.movie_id);
+    return {
+      ...movie,
+      watchlistStatus: entry.status,
+      watchlistId: entry.id
+    };
+  });
   
+  const movies = await Promise.all(moviePromises);
   return movies;
 };
 
@@ -136,4 +148,34 @@ export const isInWatchlist = async (movieId: number): Promise<boolean> => {
     // Depending on desired behavior, return false or rethrow error
     return false;
   }
+};
+
+/**
+ * Updates the status of a movie in the watchlist.
+ * @param movieId The ID of the movie to update.
+ * @param status The new status to set.
+ * @returns A promise resolving to void.
+ */
+export const updateWatchlistStatus = async (movieId: number, status: WatchStatus): Promise<void> => {
+  const token = getToken();
+  if (!token) {
+    console.error('No auth token provided.');
+    throw new Error('User not authenticated');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/watchlist/${movieId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    console.error('Failed to update watchlist status:', response.status, response.statusText);
+    throw new Error('Failed to update watchlist status');
+  }
+
+  return;
 }; 
